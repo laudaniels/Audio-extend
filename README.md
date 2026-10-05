@@ -30,6 +30,46 @@ source bin/activate
 pip install -r requirements.txt
 ```
 
+### Met een NVIDIA GPU (aanbevolen voor bruikbare snelheid)
+
+Dit is in eerste instantie op een CPU-only (WSL2) systeem gebouwd en getest. Met een
+NVIDIA GPU draait alles aanzienlijk sneller — device-detectie (`torch.cuda.is_available()`)
+gebeurt al automatisch in beide scripts, dus er hoeft niets in de code te veranderen.
+
+1. **NVIDIA-driver + CUDA toolkit** staan al op het systeem (check met `nvidia-smi`).
+2. **Venv aanmaken en torch met CUDA-support installeren — vóór de rest:**
+
+   ```bash
+   python3 -m venv .
+   source bin/activate
+   # Kies de juiste --index-url voor je CUDA-versie op https://pytorch.org/get-started/locally/
+   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+   ```
+
+   Controleer daarna dat CUDA echt gezien wordt, vóórdat je verder gaat:
+
+   ```bash
+   python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+   ```
+
+3. **Pas daarna de rest installeren**, zodat pip de al-geïnstalleerde (CUDA-)torch niet
+   overschrijft met een CPU-only versie:
+
+   ```bash
+   pip install -r requirements.txt --no-deps
+   pip check   # meldt eventuele ontbrekende sub-dependencies, los die gericht op
+   ```
+
+   (`requirements.txt` is een `pip freeze` van de CPU-only ontwikkelomgeving; met
+   `--no-deps` voorkom je dat de daarin gepinde CPU-torch je CUDA-install terugdraait.)
+
+4. **xformers**: installeer een versie die bij je CUDA/torch-combinatie past
+   (`pip install xformers`) zodat de C++/CUDA-extensies laden in plaats van de
+   pure-Python fallback die op CPU werd gebruikt.
+5. **Optioneel, voor meer throughput op GPU**: verhoog `CHUNK_SECONDS` in
+   `scripts/gui.py` (stond bewust laag op 10s voor nette progress-feedback op een
+   trage CPU) — minder chunks betekent minder overhead per `generate_continuation`-call.
+
 ## Gebruik
 
 ### CLI — snel testen van continuation
