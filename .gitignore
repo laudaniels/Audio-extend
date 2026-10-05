@@ -1,0 +1,15 @@
+# Python virtualenv (this directory IS the venv root)
+bin/
+include/
+lib/
+lib64
+share/
+pyvenv.cfg
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated/test audio (not source)
+samples/*.wav
+output/*.wav
